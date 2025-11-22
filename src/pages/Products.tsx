@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -13,14 +14,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Filter, X } from "lucide-react";
+import { Filter, Search } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import hero1 from "@/assets/hero-1.jpg";
 import hero2 from "@/assets/hero-2.jpg";
 import hero3 from "@/assets/hero-3.jpg";
 
 const Products = () => {
+  const [searchQuery, setSearchQuery] = useState("");
   const [priceRange, setPriceRange] = useState([0, 1000000]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState("featured");
   const [showFilters, setShowFilters] = useState(false);
 
   // Mock data - replace with real data later
@@ -44,6 +49,73 @@ const Products = () => {
     "Thực phẩm chức năng",
   ];
 
+  const features = ["Organic", "Vegan", "Không paraben", "Không hóa chất"];
+
+  const toggleCategory = (category: string) => {
+    setSelectedCategories(prev =>
+      prev.includes(category)
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
+  };
+
+  const toggleFeature = (feature: string) => {
+    setSelectedFeatures(prev =>
+      prev.includes(feature)
+        ? prev.filter(f => f !== feature)
+        : [...prev, feature]
+    );
+  };
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSelectedCategories([]);
+    setSelectedFeatures([]);
+    setPriceRange([0, 1000000]);
+    setSortBy("featured");
+  };
+
+  const filteredAndSortedProducts = useMemo(() => {
+    let filtered = [...products];
+
+    // Search filter
+    if (searchQuery) {
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Category filter
+    if (selectedCategories.length > 0) {
+      filtered = filtered.filter(product =>
+        selectedCategories.includes(product.category)
+      );
+    }
+
+    // Price filter
+    filtered = filtered.filter(
+      product => product.price >= priceRange[0] && product.price <= priceRange[1]
+    );
+
+    // Sort
+    switch (sortBy) {
+      case "newest":
+        filtered.sort((a, b) => b.isNew ? 1 : -1);
+        break;
+      case "price-asc":
+        filtered.sort((a, b) => a.price - b.price);
+        break;
+      case "price-desc":
+        filtered.sort((a, b) => b.price - a.price);
+        break;
+      case "bestselling":
+        filtered.sort((a, b) => (b.discount || 0) - (a.discount || 0));
+        break;
+    }
+
+    return filtered;
+  }, [products, searchQuery, selectedCategories, priceRange, sortBy]);
+
   const FilterContent = () => (
     <div className="space-y-6">
       {/* Categories */}
@@ -52,7 +124,11 @@ const Products = () => {
         <div className="space-y-3">
           {categories.map((category) => (
             <div key={category} className="flex items-center space-x-2">
-              <Checkbox id={category} />
+              <Checkbox
+                id={category}
+                checked={selectedCategories.includes(category)}
+                onCheckedChange={() => toggleCategory(category)}
+              />
               <Label
                 htmlFor={category}
                 className="text-sm font-normal cursor-pointer"
@@ -84,9 +160,13 @@ const Products = () => {
       <div>
         <h3 className="font-semibold mb-4">Đặc điểm</h3>
         <div className="space-y-3">
-          {["Organic", "Vegan", "Không paraben", "Không hóa chất"].map((feature) => (
+          {features.map((feature) => (
             <div key={feature} className="flex items-center space-x-2">
-              <Checkbox id={feature} />
+              <Checkbox
+                id={feature}
+                checked={selectedFeatures.includes(feature)}
+                onCheckedChange={() => toggleFeature(feature)}
+              />
               <Label
                 htmlFor={feature}
                 className="text-sm font-normal cursor-pointer"
@@ -97,8 +177,6 @@ const Products = () => {
           ))}
         </div>
       </div>
-
-      <Button className="w-full">Áp dụng bộ lọc</Button>
     </div>
   );
 
@@ -124,7 +202,7 @@ const Products = () => {
               <div className="sticky top-24 bg-card rounded-xl border p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="font-semibold">Bộ lọc</h2>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={clearFilters}>
                     Xóa
                   </Button>
                 </div>
@@ -134,10 +212,23 @@ const Products = () => {
 
             {/* Products Grid */}
             <div className="flex-1">
+              {/* Search Bar */}
+              <div className="mb-6">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Tìm kiếm sản phẩm..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
               {/* Toolbar */}
               <div className="flex items-center justify-between mb-6 gap-4">
                 <p className="text-sm text-muted-foreground">
-                  Hiển thị {products.length} sản phẩm
+                  Hiển thị {filteredAndSortedProducts.length} sản phẩm
                 </p>
 
                 <div className="flex items-center gap-4">
@@ -158,7 +249,7 @@ const Products = () => {
                   </Sheet>
 
                   {/* Sort */}
-                  <Select defaultValue="featured">
+                  <Select value={sortBy} onValueChange={setSortBy}>
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="Sắp xếp" />
                     </SelectTrigger>
@@ -175,9 +266,15 @@ const Products = () => {
 
               {/* Products */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-                {products.map((product) => (
-                  <ProductCard key={product.id} {...product} />
-                ))}
+                {filteredAndSortedProducts.length > 0 ? (
+                  filteredAndSortedProducts.map((product) => (
+                    <ProductCard key={product.id} {...product} />
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-12">
+                    <p className="text-muted-foreground">Không tìm thấy sản phẩm nào</p>
+                  </div>
+                )}
               </div>
 
               {/* Pagination */}
