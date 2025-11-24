@@ -11,15 +11,18 @@ model User {
   id       String @id @default(cuid())
   phone    String @unique
   password String
-  name     String
+  name     String?
+  role     String @default("customer")
 }
 
 model Product {
-  id    String  @id @default(cuid())
-  name  String
-  price Float
-  image String?
-  desc  String?
+  id          String   @id @default(cuid())
+  name        String
+  price       Float
+  oldPrice    Float?   // MỚI THÊM: Giá cũ cho khuyến mãi
+  image       String?
+  description String?
+  stock       Int      @default(99)
 }
 
 model Order {
@@ -29,6 +32,7 @@ model Order {
   address   String
   total     Float
   status    String   @default("pending")
-  items     String // <- sửa ở đây
+  note      String?
+  items     String
   createdAt DateTime @default(now())
 }
