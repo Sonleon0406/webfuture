@@ -1,8 +1,20 @@
 {
   "name": "vite_react_shadcn_ts",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
+  "description": "**URL**: https://lovable.dev/projects/8ea74d8c-88b1-44ff-b071-51ac7674d4e3",
+  "homepage": "https://github.com/Sonleon0406/webfuture#readme",
+  "bugs": {
+    "url": "https://github.com/Sonleon0406/webfuture/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sonleon0406/webfuture.git"
+  },
+  "license": "ISC",
+  "author": "",
   "type": "module",
+  "main": "eslint.config.js",
   "scripts": {
     "dev": "concurrently \"vite\" \"nodemon server/index.js\"",
     "start": "vite",
